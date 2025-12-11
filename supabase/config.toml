@@ -1,1 +1,67 @@
 project_id = "rdvlqdztvdblqlendjyi"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://127.0.0.1"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+
+[functions.agent-register]
+verify_jwt = false
+
+[functions.agent-heartbeat]
+verify_jwt = false
+
+[functions.agent-suricata]
+verify_jwt = false
+
+[functions.agent-zeek]
+verify_jwt = false
+
+[functions.agent-flows]
+verify_jwt = false
+
+[functions.agent-blocklist]
+verify_jwt = false
+
+[functions.anomaly-engine]
+verify_jwt = false
+
+[functions.firewall-orchestrator]
+verify_jwt = false
+
+[functions.api-alerts]
+verify_jwt = false
+
+[functions.api-flows]
+verify_jwt = false
+
+[functions.api-threat-score]
+verify_jwt = false
+
+[functions.api-agents]
+verify_jwt = false
+
+[functions.api-geo-events]
+verify_jwt = false
+
+[functions.api-statistics]
+verify_jwt = false
+
+[functions.api-incidents]
+verify_jwt = false
