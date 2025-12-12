@@ -1,113 +1,163 @@
-# SNSM Windows Agents
+# SNSM Agents
 
-Two PowerShell agents for capturing real network traffic and sending it to your SNSM dashboard.
+Cross-platform agents for capturing real network traffic and sending it to your SNSM dashboard.
 
 ## Quick Start
 
-### Option 1: Simple Agent (No Dependencies)
+### Python Agent (Recommended - Cross-Platform)
 
-Uses Windows built-in commands to monitor active connections. Best for quick testing.
+Works on **Linux**, **macOS**, and **Windows**.
 
-```powershell
-# Run as Administrator
-.\snsm-agent-simple.ps1
+```bash
+# Install dependencies
+pip install scapy requests psutil
+
+# Run with packet capture (requires root/admin)
+sudo python3 snsm-agent.py
+
+# Or run in simple mode (no root required)
+python3 snsm-agent.py --simple
 ```
 
-### Option 2: Full Agent (With Wireshark/tshark)
-
-Captures actual packets for more accurate traffic analysis. Requires Wireshark.
+### Windows PowerShell Agents
 
 ```powershell
-# Install Wireshark first: https://www.wireshark.org/download.html
-# Make sure to include "TShark" component during installation
+# Simple mode (no Wireshark needed)
+.\snsm-agent-simple.ps1
 
-# Run as Administrator
+# Full mode (requires Wireshark)
 .\snsm-agent-windows.ps1
 ```
 
-## Requirements
+## Agent Comparison
 
-| Agent | Requirements |
-|-------|-------------|
-| Simple | Windows PowerShell 5.1+, Administrator privileges |
-| Full | All above + Wireshark with tshark |
+| Feature | Python (scapy) | Python (simple) | PowerShell (tshark) | PowerShell (simple) |
+|---------|---------------|-----------------|---------------------|---------------------|
+| **Platforms** | Linux/Mac/Win | Linux/Mac/Win | Windows | Windows |
+| **Root Required** | Yes | No | Yes | No |
+| **Dependencies** | scapy, psutil | psutil | Wireshark | None |
+| **Packet Capture** | ✅ Real | ❌ Estimated | ✅ Real | ❌ Estimated |
+| **DDoS Detection** | ✅ | ⚠️ Limited | ✅ | ⚠️ Limited |
+| **Port Scan Detection** | ✅ | ✅ | ✅ | ✅ |
 
-## Features
+## Python Agent Usage
 
-### Both Agents
-- ✅ Auto-register with SNSM backend
-- ✅ Real-time flow data to dashboard
-- ✅ Threat detection & alerts
-- ✅ System resource monitoring (CPU, memory)
-- ✅ Heartbeat to maintain online status
+```bash
+# List available interfaces
+sudo python3 snsm-agent.py --list
 
-### Full Agent (tshark)
-- ✅ Actual packet capture
-- ✅ Accurate byte/packet counts
-- ✅ DDoS detection
-- ✅ Port scan detection
-- ✅ Protocol analysis
+# Capture on specific interface
+sudo python3 snsm-agent.py -i eth0
 
-### Simple Agent (netstat)
-- ✅ No external dependencies
-- ✅ Connection state tracking
-- ✅ Suspicious port detection
-- ✅ Estimated traffic metrics
+# Simple mode (connection monitoring only)
+python3 snsm-agent.py --simple
+
+# Verbose output
+sudo python3 snsm-agent.py -v
+```
+
+### Installing Dependencies
+
+```bash
+# All platforms
+pip install scapy requests psutil
+
+# Linux (may need additional packages)
+sudo apt install python3-scapy   # Debian/Ubuntu
+sudo yum install python3-scapy   # RHEL/CentOS
+
+# macOS
+brew install python3
+pip3 install scapy requests psutil
+```
 
 ## Testing Your DoS Attack
 
-1. Start the agent:
-   ```powershell
-   # As Administrator
-   .\snsm-agent-windows.ps1
+1. **Start the agent:**
+   ```bash
+   sudo python3 snsm-agent.py
    ```
 
-2. In another terminal, run your DoS test:
-   ```powershell
-   # Example: hping3 or your preferred tool
-   ```
+2. **In another terminal, run your DoS test**
 
-3. Watch the dashboard - you should see:
+3. **Watch the dashboard** - you should see:
    - Network Traffic Flow chart updating
    - New alerts in Live Threat Feed
    - Threat scores increasing
    - "DDoS Attack Detected" alerts (if threshold exceeded)
 
-## Parameters
+## Detection Thresholds
 
-### snsm-agent-windows.ps1
+| Detection | Threshold | Window |
+|-----------|-----------|--------|
+| Port Scan | 20+ unique ports | 10 seconds |
+| DDoS | 100+ packets | 5 seconds |
+| Suspicious Port | Single connection | - |
+| Malicious Port | Single connection | - |
+
+## PowerShell Agent Parameters
+
 ```powershell
+# Full agent
 .\snsm-agent-windows.ps1 `
     -TsharkPath "C:\Program Files\Wireshark\tshark.exe" `
-    -Interface 1 `              # Network interface number
-    -FlowInterval 5 `           # Seconds between uploads
-    -Verbose                    # Show debug output
-```
+    -Interface 1 `
+    -FlowInterval 5 `
+    -Verbose
 
-### snsm-agent-simple.ps1
-```powershell
+# Simple agent
 .\snsm-agent-simple.ps1 `
-    -ScanInterval 3 `           # Seconds between scans
-    -Verbose                    # Show debug output
+    -ScanInterval 3 `
+    -Verbose
 ```
 
 ## Troubleshooting
 
-### "tshark not found"
-Install Wireshark and ensure tshark.exe is installed (it's an optional component).
+### Python Agent
 
-### "Access denied"
-Run PowerShell as Administrator (right-click → Run as Administrator).
+**"Permission denied"**
+```bash
+# Run with sudo/root
+sudo python3 snsm-agent.py
 
-### "Execution policy"
+# Or use simple mode
+python3 snsm-agent.py --simple
+```
+
+**"No module named scapy"**
+```bash
+pip install scapy
+# or
+pip3 install scapy
+```
+
+**"No interfaces found"**
+```bash
+# List interfaces
+sudo python3 snsm-agent.py --list
+# Then specify one
+sudo python3 snsm-agent.py -i eth0
+```
+
+### PowerShell Agent
+
+**"tshark not found"**
+Install Wireshark from https://www.wireshark.org/download.html
+
+**"Access denied"**
+Run PowerShell as Administrator
+
+**"Execution policy"**
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 ```
 
-### No data on dashboard
+### No Data on Dashboard
+
 1. Check agent shows "Registered!" message
 2. Verify your firewall allows outbound HTTPS
 3. Check the agent ID matches in backend logs
+4. Ensure you're generating network traffic
 
 ## Architecture
 
