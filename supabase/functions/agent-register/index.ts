@@ -16,11 +16,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { agent_id, hostname, os, version, ip_address } = await req.json();
+    const body = await req.json();
+    const { hostname, os, version, ip_address } = body;
+    // Generate agent_id if not provided
+    const agent_id = body.agent_id || crypto.randomUUID();
 
-    if (!agent_id || !hostname) {
+    if (!hostname) {
       return new Response(
-        JSON.stringify({ error: 'agent_id and hostname are required' }),
+        JSON.stringify({ error: 'hostname is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -56,6 +59,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         agent: data,
+        agent_id: agent_id,
         message: 'Agent registered successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
