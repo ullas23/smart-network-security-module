@@ -47,10 +47,10 @@ const Header = () => {
             </div>
             <div>
               <h1 className="text-lg font-bold text-primary text-glow tracking-wider">
-                SENTINEL
+                SNSM
               </h1>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                Cyber Defense Platform
+                Smart Network Security Module
               </p>
             </div>
           </motion.div>
