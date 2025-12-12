@@ -24,7 +24,7 @@ const IPConfigPanel = ({ onConnectionChange }: IPConfigPanelProps) => {
   } = useSession();
   
   const [manualIp, setManualIp] = useState("");
-  const [enableSimulation, setEnableSimulation] = useState(true);
+  const [enableSimulation, setEnableSimulation] = useState(false);
   const [trafficCount, setTrafficCount] = useState(0);
   
   const { config, isConnecting, isConnected, registerAgent, disconnect } = useAgentConfig();
