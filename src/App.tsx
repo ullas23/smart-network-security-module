@@ -10,6 +10,9 @@ import AgentsPage from "./pages/AgentsPage";
 import TerminalPage from "./pages/TerminalPage";
 import LogsPage from "./pages/LogsPage";
 import SettingsPage from "./pages/SettingsPage";
+import MonitorPage from "./pages/MonitorPage";
+import ThreatMapPage from "./pages/ThreatMapPage";
+import SocAnalysisPage from "./pages/SocAnalysisPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,12 +25,12 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/monitor" element={<Navigate to="/" replace />} />
+          <Route path="/monitor" element={<MonitorPage />} />
           <Route path="/alerts" element={<AlertsPage />} />
           <Route path="/ids" element={<AlertsPage />} />
           <Route path="/flows" element={<FlowsPage />} />
-          <Route path="/map" element={<Navigate to="/" replace />} />
-          <Route path="/soc" element={<Navigate to="/alerts" replace />} />
+          <Route path="/map" element={<ThreatMapPage />} />
+          <Route path="/soc" element={<SocAnalysisPage />} />
           <Route path="/terminal" element={<TerminalPage />} />
           <Route path="/agents" element={<AgentsPage />} />
           <Route path="/logs" element={<LogsPage />} />

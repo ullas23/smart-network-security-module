@@ -9,16 +9,16 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useTrafficStats, useAlerts } from "@/hooks/useSNSMData";
+import { useFlows, useAlerts } from "@/hooks/useSNSMData";
 import { format } from "date-fns";
 
 const NetworkFlowChart = () => {
-  const { data: trafficStats, isLoading } = useTrafficStats(30);
+  const { data: flows, isLoading } = useFlows(100);
   const { data: alerts } = useAlerts(100);
 
-  // Transform data for chart
+  // Transform data for chart using real flows
   const chartData = useMemo(() => {
-    if (!trafficStats || trafficStats.length === 0) {
+    if (!flows || flows.length === 0) {
       // Generate placeholder data if no real data
       return Array.from({ length: 30 }, (_, i) => ({
         time: `${i}s`,
@@ -28,15 +28,22 @@ const NetworkFlowChart = () => {
       }));
     }
 
-    return trafficStats.map((stat, index) => ({
-      time: stat.timestamp 
-        ? format(new Date(stat.timestamp), "HH:mm:ss") 
+    // Oldest first for smoother chart
+    const ordered = [...flows].sort((a, b) => {
+      const ta = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+      const tb = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+      return ta - tb;
+    });
+
+    return ordered.map((flow, index) => ({
+      time: flow.timestamp
+        ? format(new Date(flow.timestamp), "HH:mm:ss")
         : `${index}s`,
-      inbound: (stat.bytes_per_sec || 0) / 1024, // Convert to KB
-      outbound: (stat.packets_per_sec || 0) * 10, // Approximate outbound
-      threats: stat.alerts_per_min || 0,
+      inbound: (flow.bytes_recv || 0) / 1024, // KB received
+      outbound: (flow.bytes_sent || 0) / 1024, // KB sent
+      threats: flow.threat_score || 0,
     }));
-  }, [trafficStats]);
+  }, [flows]);
 
   // Count recent threats from alerts
   const recentThreats = useMemo(() => {
