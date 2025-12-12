@@ -1,16 +1,20 @@
 import { motion } from "framer-motion";
 import CyberCard from "@/components/ui/CyberCard";
-import { Activity } from "lucide-react";
-import { useGlobalThreatLevel, useAgents, useBlocklist } from "@/hooks/useSNSMData";
+import { Activity, WifiOff } from "lucide-react";
+import { useGlobalThreatLevel, useAgents, useBlocklist, useThreatScores } from "@/hooks/useSNSMData";
 
 const ThreatScoreGauge = () => {
   const { score, status, label } = useGlobalThreatLevel();
-  const { data: agents } = useAgents();
+  const { data: agents, isLoading: agentsLoading } = useAgents();
   const { data: blocklist } = useBlocklist();
+  const { data: threatScores } = useThreatScores(10);
 
   const onlineAgents = agents?.filter((a) => a.status === "online").length || 0;
   const degradedAgents = agents?.filter((a) => a.status === "degraded").length || 0;
   const blockedIPs = blocklist?.length || 0;
+  
+  // Check if we have any real threat data
+  const hasRealData = (threatScores && threatScores.length > 0) || onlineAgents > 0;
 
   const getColor = () => {
     switch (status) {
@@ -25,6 +29,43 @@ const ThreatScoreGauge = () => {
 
   const circumference = 2 * Math.PI * 80;
   const strokeDashoffset = circumference - (score / 100) * circumference;
+
+  // No data state
+  if (!agentsLoading && !hasRealData && score === 0) {
+    return (
+      <CyberCard
+        title="Global Threat Level"
+        icon={<Activity className="w-4 h-4" />}
+        className="h-full"
+      >
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+          <WifiOff className="w-12 h-12 mb-4 opacity-40" />
+          <p className="text-sm font-medium">Awaiting Agent Data</p>
+          <p className="text-xs mt-1 text-center max-w-xs">
+            No threat intelligence available. Deploy an agent to start monitoring.
+          </p>
+          
+          {/* Grayed out gauge preview */}
+          <div className="mt-6 relative w-32 h-32 opacity-30">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 200 200">
+              <circle
+                cx="100"
+                cy="100"
+                r="80"
+                fill="none"
+                stroke="hsl(var(--muted))"
+                strokeWidth="8"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <div className="text-3xl font-bold font-terminal">--</div>
+              <div className="text-xs uppercase tracking-widest mt-1">No Data</div>
+            </div>
+          </div>
+        </div>
+      </CyberCard>
+    );
+  }
 
   return (
     <CyberCard

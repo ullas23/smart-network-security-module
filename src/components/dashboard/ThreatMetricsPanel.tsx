@@ -1,7 +1,7 @@
-import { useSNSMStats, useAlerts, useFlows } from "@/hooks/useSNSMData";
+import { useSNSMStats, useAlerts, useFlows, useAgents } from "@/hooks/useSNSMData";
 import CyberCard from "@/components/ui/CyberCard";
 import StatDisplay from "@/components/ui/StatDisplay";
-import { Activity, Shield, Wifi, Database, AlertOctagon } from "lucide-react";
+import { Activity, Shield, Wifi, Database, AlertOctagon, WifiOff } from "lucide-react";
 
 const formatBytes = (bytes: number): string => {
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -22,6 +22,10 @@ const formatNumber = (num: number): string => {
 const ThreatMetricsPanel = () => {
   const stats = useSNSMStats();
   const { data: flows } = useFlows(100);
+  const { data: agents } = useAgents();
+  
+  // Check if we have any online agents
+  const hasOnlineAgents = agents?.some((a) => a.status === "online");
   
   // Calculate bytes analyzed from flows
   const bytesAnalyzed = flows?.reduce(
@@ -34,9 +38,21 @@ const ThreatMetricsPanel = () => {
     (sum, flow) => sum + (flow.packets_sent || 0) + (flow.packets_recv || 0),
     0
   ) || 0;
+  
+  // Check if we have real data
+  const hasRealData = (flows && flows.length > 0) || stats.totalAlerts > 0;
+
+  // No data indicator
+  const noDataIndicator = !hasRealData && !hasOnlineAgents ? (
+    <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded border border-warning/20 bg-warning/5 text-warning text-xs">
+      <WifiOff className="w-4 h-4" />
+      <span>No live agent data - metrics show historical data only</span>
+    </div>
+  ) : null;
 
   return (
     <CyberCard title="System Metrics" icon={<Activity className="w-4 h-4" />}>
+      {noDataIndicator}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatDisplay
           label="Total Alerts"

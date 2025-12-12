@@ -62,8 +62,13 @@ const TopThreatsPanel = () => {
         {(!threatScores || threatScores.length === 0) ? (
           <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
             <Globe className="w-10 h-10 mb-3 opacity-50" />
-            <p className="text-sm">No threat sources detected</p>
-            <p className="text-xs">All monitored IPs appear safe</p>
+            <p className="text-sm font-medium">No Threat Sources Detected</p>
+            <p className="text-xs mt-1 text-center">
+              Deploy an SNSM agent to identify threat sources from real traffic
+            </p>
+            <div className="mt-3 px-3 py-1.5 rounded border border-primary/20 bg-primary/5 text-xs">
+              Awaiting agent data...
+            </div>
           </div>
         ) : (
           threatScores.map((threat, index) => (
