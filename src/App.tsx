@@ -16,7 +16,17 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          {/* Redirect all sidebar routes to dashboard for now */}
           <Route path="/monitor" element={<Navigate to="/" replace />} />
+          <Route path="/alerts" element={<Navigate to="/" replace />} />
+          <Route path="/ids" element={<Navigate to="/" replace />} />
+          <Route path="/flows" element={<Navigate to="/" replace />} />
+          <Route path="/map" element={<Navigate to="/" replace />} />
+          <Route path="/soc" element={<Navigate to="/" replace />} />
+          <Route path="/terminal" element={<Navigate to="/" replace />} />
+          <Route path="/agents" element={<Navigate to="/" replace />} />
+          <Route path="/logs" element={<Navigate to="/" replace />} />
+          <Route path="/settings" element={<Navigate to="/" replace />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
