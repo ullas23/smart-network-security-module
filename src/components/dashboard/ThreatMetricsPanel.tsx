@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { ThreatMetrics, generateMetrics } from "@/data/mockAlerts";
+import { useSNSMStats, useAlerts, useFlows } from "@/hooks/useSNSMData";
 import CyberCard from "@/components/ui/CyberCard";
 import StatDisplay from "@/components/ui/StatDisplay";
 import { Activity, Shield, Wifi, Database, AlertOctagon } from "lucide-react";
@@ -21,46 +20,43 @@ const formatNumber = (num: number): string => {
 };
 
 const ThreatMetricsPanel = () => {
-  const [metrics, setMetrics] = useState<ThreatMetrics>(generateMetrics());
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMetrics((prev) => ({
-        ...prev,
-        totalAlerts: prev.totalAlerts + Math.floor(Math.random() * 5),
-        criticalCount: prev.criticalCount + (Math.random() > 0.9 ? 1 : 0),
-        highCount: prev.highCount + (Math.random() > 0.8 ? 1 : 0),
-        activeConnections: prev.activeConnections + Math.floor(Math.random() * 10 - 5),
-        bytesAnalyzed: prev.bytesAnalyzed + Math.floor(Math.random() * 1000000),
-        packetsProcessed: prev.packetsProcessed + Math.floor(Math.random() * 1000),
-      }));
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const stats = useSNSMStats();
+  const { data: flows } = useFlows(100);
+  
+  // Calculate bytes analyzed from flows
+  const bytesAnalyzed = flows?.reduce(
+    (sum, flow) => sum + (flow.bytes_sent || 0) + (flow.bytes_recv || 0),
+    0
+  ) || 0;
+  
+  // Calculate packets from flows
+  const packetsProcessed = flows?.reduce(
+    (sum, flow) => sum + (flow.packets_sent || 0) + (flow.packets_recv || 0),
+    0
+  ) || 0;
 
   return (
     <CyberCard title="System Metrics" icon={<Activity className="w-4 h-4" />}>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <StatDisplay
           label="Total Alerts"
-          value={formatNumber(metrics.totalAlerts)}
-          trend="up"
+          value={formatNumber(stats.totalAlerts)}
+          trend={stats.totalAlerts > 0 ? "up" : "neutral"}
         />
         <StatDisplay
           label="Critical Threats"
-          value={metrics.criticalCount}
+          value={stats.criticalAlerts}
           variant="threat"
-          trend={metrics.criticalCount > 40 ? "up" : "neutral"}
+          trend={stats.criticalAlerts > 5 ? "up" : "neutral"}
         />
         <StatDisplay
-          label="Active Connections"
-          value={formatNumber(metrics.activeConnections)}
-          subValue="real-time"
+          label="Active Agents"
+          value={`${stats.onlineAgents}/${stats.totalAgents}`}
+          subValue="connected"
         />
         <StatDisplay
           label="Blocked IPs"
-          value={metrics.blockedIPs}
+          value={stats.blockedIPs}
           variant="success"
         />
       </div>
@@ -73,7 +69,7 @@ const ThreatMetricsPanel = () => {
           <div>
             <div className="text-xs text-muted-foreground">Data Analyzed</div>
             <div className="text-sm font-mono text-foreground">
-              {formatBytes(metrics.bytesAnalyzed)}
+              {formatBytes(bytesAnalyzed)}
             </div>
           </div>
         </div>
@@ -85,7 +81,7 @@ const ThreatMetricsPanel = () => {
           <div>
             <div className="text-xs text-muted-foreground">Packets</div>
             <div className="text-sm font-mono text-foreground">
-              {formatNumber(metrics.packetsProcessed)}
+              {formatNumber(packetsProcessed)}
             </div>
           </div>
         </div>
@@ -96,7 +92,7 @@ const ThreatMetricsPanel = () => {
           </div>
           <div>
             <div className="text-xs text-muted-foreground">High Severity</div>
-            <div className="text-sm font-mono text-warning">{metrics.highCount}</div>
+            <div className="text-sm font-mono text-warning">{stats.highAlerts}</div>
           </div>
         </div>
 
@@ -107,7 +103,7 @@ const ThreatMetricsPanel = () => {
           <div>
             <div className="text-xs text-muted-foreground">Avg Threat Score</div>
             <div className="text-sm font-mono text-foreground">
-              {metrics.avgThreatScore.toFixed(1)}%
+              {stats.avgThreatScore.toFixed(1)}%
             </div>
           </div>
         </div>

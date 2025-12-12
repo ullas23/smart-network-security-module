@@ -9,36 +9,29 @@ import NetworkFlowChart from "@/components/dashboard/NetworkFlowChart";
 import TopThreatsPanel from "@/components/dashboard/TopThreatsPanel";
 import SystemStatus from "@/components/dashboard/SystemStatus";
 import CommandTerminal from "@/components/dashboard/CommandTerminal";
+import IPConfigPanel from "@/components/dashboard/IPConfigPanel";
 import TerminalText from "@/components/ui/TerminalText";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background relative">
-      {/* Matrix Rain Background */}
       <MatrixRain />
-
-      {/* Scanlines overlay */}
       <div className="fixed inset-0 pointer-events-none scanlines z-10" />
 
       <div className="relative z-20 flex w-full">
-        {/* Sidebar */}
         <Sidebar />
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col min-h-screen">
-          {/* Header */}
           <Header />
 
-          {/* Dashboard Content */}
           <main className="flex-1 p-6 overflow-auto">
-            {/* Welcome Banner */}
             <motion.div
               className="mb-6"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               <TerminalText
-                text="SENTINEL CYBER DEFENSE PLATFORM INITIALIZED"
+                text="SNSM - SMART NETWORK SECURITY MODULE INITIALIZED"
                 className="text-lg mb-2"
                 typeSpeed={30}
               />
@@ -47,7 +40,6 @@ const Index = () => {
               </p>
             </motion.div>
 
-            {/* Metrics Panel */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -57,18 +49,23 @@ const Index = () => {
               <ThreatMetricsPanel />
             </motion.div>
 
-            {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* Threat Score */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
               >
+                <IPConfigPanel />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.25 }}
+              >
                 <ThreatScoreGauge />
               </motion.div>
 
-              {/* Network Flow Chart */}
               <motion.div
                 className="lg:col-span-2"
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -79,9 +76,7 @@ const Index = () => {
               </motion.div>
             </div>
 
-            {/* Secondary Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Alerts Feed */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -90,7 +85,6 @@ const Index = () => {
                 <AlertsFeed />
               </motion.div>
 
-              {/* Top Threats */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -100,9 +94,7 @@ const Index = () => {
               </motion.div>
             </div>
 
-            {/* Bottom Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* System Status */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -111,7 +103,6 @@ const Index = () => {
                 <SystemStatus />
               </motion.div>
 
-              {/* Command Terminal */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -122,18 +113,16 @@ const Index = () => {
             </div>
           </main>
 
-          {/* Footer */}
           <footer className="border-t border-primary/10 px-6 py-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-4">
-                <span>© 2024 SENTINEL Security Platform</span>
+                <span>© 2024 SNSM Security Platform</span>
                 <span className="text-primary/50">|</span>
                 <span>Classification: CONFIDENTIAL</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-success">● Connected</span>
-                <span>Latency: 23ms</span>
-                <span>Uptime: 99.97%</span>
+                <span>Hybrid Cloud Architecture</span>
               </div>
             </div>
           </footer>

@@ -1,53 +1,46 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import CyberCard from "@/components/ui/CyberCard";
-import { Server, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { Server, CheckCircle2, AlertCircle, XCircle, Loader2 } from "lucide-react";
+import { useAgents } from "@/hooks/useSNSMData";
 
-interface SystemService {
-  id: string;
-  name: string;
-  status: "online" | "warning" | "offline";
-  latency: number;
-  uptime: string;
-}
-
-const initialServices: SystemService[] = [
-  { id: "1", name: "Packet Capture (dumpcap)", status: "online", latency: 12, uptime: "99.9%" },
-  { id: "2", name: "Flow Analyzer (Zeek)", status: "online", latency: 45, uptime: "99.8%" },
-  { id: "3", name: "IDS Engine (Suricata)", status: "online", latency: 23, uptime: "99.9%" },
-  { id: "4", name: "Firewall (nftables)", status: "online", latency: 8, uptime: "100%" },
-  { id: "5", name: "Anomaly Engine", status: "warning", latency: 156, uptime: "98.5%" },
-  { id: "6", name: "Correlation API", status: "online", latency: 34, uptime: "99.7%" },
-  { id: "7", name: "Redis Cache", status: "online", latency: 2, uptime: "99.99%" },
-  { id: "8", name: "Loki Logging", status: "online", latency: 67, uptime: "99.5%" },
+// Static services representing the SNSM architecture
+const staticServices = [
+  { id: "dumpcap", name: "Packet Capture (dumpcap)", baseLatency: 12 },
+  { id: "zeek", name: "Flow Analyzer (Zeek)", baseLatency: 45 },
+  { id: "suricata", name: "IDS Engine (Suricata)", baseLatency: 23 },
+  { id: "nftables", name: "Firewall (nftables)", baseLatency: 8 },
+  { id: "anomaly", name: "Anomaly Engine", baseLatency: 56 },
+  { id: "correlation", name: "Correlation API", baseLatency: 34 },
+  { id: "redis", name: "Redis Cache", baseLatency: 2 },
+  { id: "loki", name: "Loki Logging", baseLatency: 67 },
 ];
 
 const SystemStatus = () => {
-  const [services, setServices] = useState<SystemService[]>(initialServices);
+  const { data: agents, isLoading } = useAgents();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setServices((prev) =>
-        prev.map((service) => ({
-          ...service,
-          latency: Math.max(
-            1,
-            service.latency + Math.floor(Math.random() * 20 - 10)
-          ),
-          status:
-            Math.random() > 0.98
-              ? "warning"
-              : Math.random() > 0.995
-              ? "offline"
-              : service.status === "offline" && Math.random() > 0.5
-              ? "online"
-              : service.status,
-        }))
-      );
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Derive service status from agent data
+  const services = staticServices.map((service) => {
+    const hasOnlineAgents = agents?.some((a) => a.status === "online");
+    const hasDegradedAgents = agents?.some((a) => a.status === "degraded");
+    
+    // Simulate service status based on agents
+    let status: "online" | "warning" | "offline" = "offline";
+    if (hasOnlineAgents) {
+      status = Math.random() > 0.95 ? "warning" : "online";
+    } else if (hasDegradedAgents) {
+      status = "warning";
+    }
+    
+    // Add some randomness to latency for realism
+    const latency = service.baseLatency + Math.floor(Math.random() * 20 - 10);
+    
+    return {
+      ...service,
+      status,
+      latency: Math.max(1, latency),
+      uptime: status === "online" ? "99.9%" : status === "warning" ? "98.5%" : "0%",
+    };
+  });
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -67,6 +60,21 @@ const SystemStatus = () => {
   };
 
   const onlineCount = services.filter((s) => s.status === "online").length;
+
+  if (isLoading) {
+    return (
+      <CyberCard
+        title="System Services"
+        icon={<Server className="w-4 h-4" />}
+        className="h-full"
+      >
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          <span className="ml-2 text-muted-foreground">Checking services...</span>
+        </div>
+      </CyberCard>
+    );
+  }
 
   return (
     <CyberCard

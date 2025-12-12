@@ -1,24 +1,16 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import CyberCard from "@/components/ui/CyberCard";
 import { Activity } from "lucide-react";
+import { useGlobalThreatLevel, useAgents, useBlocklist } from "@/hooks/useSNSMData";
 
 const ThreatScoreGauge = () => {
-  const [score, setScore] = useState(45);
-  const [status, setStatus] = useState<"safe" | "warning" | "danger">("warning");
+  const { score, status, label } = useGlobalThreatLevel();
+  const { data: agents } = useAgents();
+  const { data: blocklist } = useBlocklist();
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newScore = Math.max(0, Math.min(100, score + (Math.random() * 10 - 5)));
-      setScore(newScore);
-
-      if (newScore < 30) setStatus("safe");
-      else if (newScore < 70) setStatus("warning");
-      else setStatus("danger");
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [score]);
+  const onlineAgents = agents?.filter((a) => a.status === "online").length || 0;
+  const degradedAgents = agents?.filter((a) => a.status === "degraded").length || 0;
+  const blockedIPs = blocklist?.length || 0;
 
   const getColor = () => {
     switch (status) {
@@ -103,25 +95,23 @@ const ThreatScoreGauge = () => {
             className="text-sm uppercase tracking-wider font-medium"
             style={{ color: getColor() }}
           >
-            {status === "safe" && "Systems Secure"}
-            {status === "warning" && "Elevated Risk"}
-            {status === "danger" && "Critical Alert"}
+            {label}
           </span>
         </div>
 
         {/* Additional metrics */}
         <div className="mt-6 grid grid-cols-3 gap-4 w-full text-center">
           <div>
-            <div className="text-2xl font-terminal text-success">12</div>
+            <div className="text-2xl font-terminal text-success">{onlineAgents}</div>
             <div className="text-xs text-muted-foreground">Agents Online</div>
           </div>
           <div>
-            <div className="text-2xl font-terminal text-warning">3</div>
-            <div className="text-xs text-muted-foreground">Under Attack</div>
+            <div className="text-2xl font-terminal text-warning">{degradedAgents}</div>
+            <div className="text-xs text-muted-foreground">Degraded</div>
           </div>
           <div>
-            <div className="text-2xl font-terminal text-info">847</div>
-            <div className="text-xs text-muted-foreground">Rules Active</div>
+            <div className="text-2xl font-terminal text-info">{blockedIPs}</div>
+            <div className="text-xs text-muted-foreground">IPs Blocked</div>
           </div>
         </div>
       </div>

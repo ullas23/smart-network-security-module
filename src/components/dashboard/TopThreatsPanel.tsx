@@ -1,63 +1,11 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import CyberCard from "@/components/ui/CyberCard";
 import ThreatBadge from "@/components/ui/ThreatBadge";
-import { Crosshair, Globe, Server } from "lucide-react";
-
-interface TopThreat {
-  id: string;
-  ip: string;
-  country: string;
-  attackType: string;
-  count: number;
-  threatScore: number;
-  blocked: boolean;
-}
-
-const countries = ["CN", "RU", "KP", "IR", "US", "BR", "IN", "DE", "NL", "UA"];
-const attackTypes = [
-  "Brute Force",
-  "DDoS",
-  "SQL Injection",
-  "Port Scan",
-  "Malware C2",
-  "Phishing",
-  "Data Exfil",
-];
-
-const generateThreat = (): TopThreat => ({
-  id: Math.random().toString(36).substr(2, 9),
-  ip: `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(
-    Math.random() * 255
-  )}.${Math.floor(Math.random() * 255)}`,
-  country: countries[Math.floor(Math.random() * countries.length)],
-  attackType: attackTypes[Math.floor(Math.random() * attackTypes.length)],
-  count: Math.floor(Math.random() * 1000) + 100,
-  threatScore: Math.random() * 100,
-  blocked: Math.random() > 0.3,
-});
+import { Crosshair, Globe, Loader2 } from "lucide-react";
+import { useThreatScores } from "@/hooks/useSNSMData";
 
 const TopThreatsPanel = () => {
-  const [threats, setThreats] = useState<TopThreat[]>(
-    Array.from({ length: 8 }, generateThreat).sort((a, b) => b.threatScore - a.threatScore)
-  );
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setThreats((prev) => {
-        const updated = [...prev];
-        const index = Math.floor(Math.random() * updated.length);
-        updated[index] = {
-          ...updated[index],
-          count: updated[index].count + Math.floor(Math.random() * 10),
-          threatScore: Math.min(100, updated[index].threatScore + Math.random() * 5),
-        };
-        return updated.sort((a, b) => b.threatScore - a.threatScore);
-      });
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const { data: threatScores, isLoading, error } = useThreatScores(10);
 
   const getThreatLevel = (score: number) => {
     if (score >= 80) return "critical";
@@ -67,6 +15,43 @@ const TopThreatsPanel = () => {
     return "info";
   };
 
+  const getClassification = (score: number) => {
+    if (score >= 90) return "Critical - Auto Block";
+    if (score >= 70) return "High Risk";
+    if (score >= 40) return "Medium Risk";
+    if (score >= 20) return "Low Risk";
+    return "Benign";
+  };
+
+  if (isLoading) {
+    return (
+      <CyberCard
+        title="Top Threat Sources"
+        icon={<Crosshair className="w-4 h-4" />}
+        className="h-full"
+      >
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+          <span className="ml-2 text-muted-foreground">Loading threats...</span>
+        </div>
+      </CyberCard>
+    );
+  }
+
+  if (error) {
+    return (
+      <CyberCard
+        title="Top Threat Sources"
+        icon={<Crosshair className="w-4 h-4" />}
+        className="h-full"
+      >
+        <div className="flex items-center justify-center h-64 text-destructive">
+          Failed to load threat data
+        </div>
+      </CyberCard>
+    );
+  }
+
   return (
     <CyberCard
       title="Top Threat Sources"
@@ -74,60 +59,67 @@ const TopThreatsPanel = () => {
       className="h-full"
     >
       <div className="space-y-2">
-        {threats.map((threat, index) => (
-          <motion.div
-            key={threat.id}
-            className="flex items-center gap-3 p-2 rounded border border-primary/10 bg-background/50 hover:bg-primary/5 transition-colors"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.05 }}
-          >
-            <div className="text-xs text-muted-foreground w-4">#{index + 1}</div>
+        {(!threatScores || threatScores.length === 0) ? (
+          <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+            <Globe className="w-10 h-10 mb-3 opacity-50" />
+            <p className="text-sm">No threat sources detected</p>
+            <p className="text-xs">All monitored IPs appear safe</p>
+          </div>
+        ) : (
+          threatScores.map((threat, index) => (
+            <motion.div
+              key={threat.id}
+              className="flex items-center gap-3 p-2 rounded border border-primary/10 bg-background/50 hover:bg-primary/5 transition-colors"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <div className="text-xs text-muted-foreground w-4">#{index + 1}</div>
 
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Globe className="w-3 h-3 text-muted-foreground shrink-0" />
-              <span className="text-xs text-muted-foreground">{threat.country}</span>
-              <span className="font-mono text-sm text-foreground truncate">
-                {threat.ip}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="text-xs text-muted-foreground hidden md:block">
-                {threat.attackType}
-              </span>
-
-              <div className="w-20">
-                <div className="flex items-center gap-1">
-                  <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full rounded-full"
-                      style={{
-                        backgroundColor:
-                          threat.threatScore >= 80
-                            ? "hsl(var(--destructive))"
-                            : threat.threatScore >= 50
-                            ? "hsl(var(--warning))"
-                            : "hsl(var(--primary))",
-                      }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${threat.threatScore}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-mono w-8 text-right">
-                    {threat.threatScore.toFixed(0)}
-                  </span>
-                </div>
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <Globe className="w-3 h-3 text-muted-foreground shrink-0" />
+                <span className="font-mono text-sm text-foreground truncate">
+                  {threat.ip_address}
+                </span>
               </div>
 
-              <ThreatBadge level={getThreatLevel(threat.threatScore)} />
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-xs text-muted-foreground hidden md:block">
+                  {threat.classification || getClassification(threat.combined_score || 0)}
+                </span>
 
-              {threat.blocked && (
-                <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-              )}
-            </div>
-          </motion.div>
-        ))}
+                <div className="w-20">
+                  <div className="flex items-center gap-1">
+                    <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full"
+                        style={{
+                          backgroundColor:
+                            (threat.combined_score || 0) >= 80
+                              ? "hsl(var(--destructive))"
+                              : (threat.combined_score || 0) >= 50
+                              ? "hsl(var(--warning))"
+                              : "hsl(var(--primary))",
+                        }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${threat.combined_score || 0}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-mono w-8 text-right">
+                      {(threat.combined_score || 0).toFixed(0)}
+                    </span>
+                  </div>
+                </div>
+
+                <ThreatBadge level={getThreatLevel(threat.combined_score || 0)} />
+
+                <div className="text-xs text-muted-foreground">
+                  {threat.alert_count || 0} alerts
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
     </CyberCard>
   );
